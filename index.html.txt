@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Siwon Final Preview</title>
+</head>
+<body>
+  <h1>公開テスト成功！</h1>
+  <p>これは GitHub Pages で表示されています。</p>
+</body>
+</html>
