@@ -17,7 +17,8 @@ const BADGE_TEXT=MARK,WELCOME="ようこそ。思考力＆AIスキル養成ツ�
 let shown=false;function ensureBadge(){if(document.getElementById("siwon-badge"))return;const b=document.createElement("div");b.id="siwon-badge";b.textContent=BADGE_TEXT;b.style.cssText="position:fixed;right:8px;bottom:8px;padding:4px 8px;border:1px solid #ccc;background:#fff;font-size:12px;border-radius:6px;opacity:.9;z-index:9999";document.body.appendChild(b);}
 function focusId(){const c=document.querySelector("[name=id],#id,#user-id,input[type=text],input[autocomplete='username']"); if(c){try{c.focus();}catch(e){}}}
 function showWelcomeOnce(){if(shown)return; shown=true; const d=document.createElement("div"); d.textContent=WELCOME; d.setAttribute("role","status"); d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:16px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px"; document.body.appendChild(d); setTimeout(()=>{d.remove();focusId();},1400);}
-function boot(){ensureBadge();window.addEventListener("keydown",(e)=>{if((e.key==="1"||e.code==="Digit1")&&!e.altKey&&!e.ctrlKey&&!e.metaKey){showWelcomeOnce();}});}
+function boot(){
+    autoStartAfterId();ensureBadge();window.addEventListener("keydown",(e)=>{if((e.key==="1"||e.code==="Digit1")&&!e.altKey&&!e.ctrlKey&&!e.metaKey){showWelcomeOnce();}});}
 if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();})();</script>
 <script>(function(){
   const MARK="Siwon 20250807 / 2025-08-19 md-minimal";
@@ -114,7 +115,8 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
   }
 
   // 1) 起動直後：難易度UI除去＋最小表示
-  function boot(){ zap(document.body); minimalBanner(); }
+  function boot(){
+    autoStartAfterId(); zap(document.body); minimalBanner(); }
 
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",boot); }
   else { boot(); }
@@ -194,7 +196,8 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
   }
 
   // (4) 起動時＆動的変化の両方で適用
-  function boot(){ nukeChoices(document.body); minimalBanner(); }
+  function boot(){
+    autoStartAfterId(); nukeChoices(document.body); minimalBanner(); }
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
 
   new MutationObserver(m=>{
@@ -252,7 +255,8 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     }catch(_){}
   }
 
-  function boot(){ nuke(); minimal(); }
+  function boot(){
+    autoStartAfterId(); nuke(); minimal(); }
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
 
   new MutationObserver(()=>{ nuke(); }).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
@@ -350,7 +354,8 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     }catch(_){}
   }
 
-  function boot(){ zapRoot(document); minimal(); ensureFreeForm(); autoStart(); }
+  function boot(){
+    autoStartAfterId(); zapRoot(document); minimal(); ensureFreeForm(); autoStart(); }
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
 
   // 何度でも後追い掃除
@@ -361,7 +366,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
   try{ if(!location.search.includes("_v=")){ const u=new URL(location.href); u.searchParams.set("_v","md-minimal-v5"); history.replaceState(null,"",u.toString()); } }catch(_){}
 })();</script>
 <script>(function(){
-  const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v6";
+  const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v6.1";
 
   // 既存の歓迎/バッジ/ガードの無効化
   try{window.showWelcomeOnce=function(){};}catch(_){}
@@ -455,7 +460,8 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     }catch(_){}
   }
 
-  function boot(){ minimal(); zapRoot(document); ensureFreeForm(); clearStartModals(); }
+  function boot(){
+    autoStartAfterId(); minimal(); zapRoot(document); ensureFreeForm(); clearStartModals(); }
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
 
   new MutationObserver(()=>{ zapRoot(document); ensureFreeForm(); clearStartModals(); })
@@ -464,6 +470,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
   try{ if(!location.search.includes("_v=")){ const u=new URL(location.href); u.searchParams.set("_v","md-minimal-v6"); history.replaceState(null,"",u.toString()); } }catch(_){}
 })();</script>
 </body></html>
+
 
 
 
