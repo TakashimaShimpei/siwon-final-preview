@@ -1,14 +1,11 @@
 <!doctype html><html lang="ja"><head>
-<style id="siwon-css-kill">
-/* 初期描画から選択式を不可視化（後で恒久削除） */
+<style id="siwon-css-v6">
+/* 初期描画から選択式UIを視覚的に消す */
 input[type=radio],input[type=checkbox],select,option{display:none!important;visibility:hidden!important}
 [role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options]{display:none!important;visibility:hidden!important}
 </style>
-<style id="siwon-css-kill">
-/* 即時に視覚消去： */
-input[type=radio], input[type=checkbox], select, option { display:none !important; visibility:hidden !important; }
-[role='radiogroup'], .options, .option, .choices, .choice, [data-choice], [data-options] { display:none !important; visibility:hidden !important; }
-</style>
+
+
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Siwon 20250807 (gh-pages)</title>
 </head><body>
@@ -363,7 +360,111 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
   // URLスタンプ（リロード無し）
   try{ if(!location.search.includes("_v=")){ const u=new URL(location.href); u.searchParams.set("_v","md-minimal-v5"); history.replaceState(null,"",u.toString()); } }catch(_){}
 })();</script>
+<script>(function(){
+  const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v6";
+
+  // 既存の歓迎/バッジ/ガードの無効化
+  try{window.showWelcomeOnce=function(){};}catch(_){}
+  try{document.getElementById('siwon-badge')?.remove();}catch(_){}
+  try{document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove());}catch(_){}
+
+  // “長い案内”を常に消す & 最小バナーを1秒だけ
+  function minimal(){
+    try{
+      document.querySelectorAll("*").forEach(el=>{
+        const t=(el.innerText||"").trim();
+        if(/ようこそ|思考力.?AIスキル養成ツール|ベーシック版/.test(t)) el.innerHTML="";
+      });
+      if(!document.getElementById("siwon-minimal")){
+        const d=document.createElement("div");
+        d.id="siwon-minimal";
+        d.textContent="モードIDをどうぞ";
+        d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:12px;background:#111;color:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px";
+        document.body.appendChild(d); setTimeout(()=>{try{d.remove()}catch(_){}},1000);
+      }
+      const idCand=document.querySelector("textarea,[name=id],#id,#user-id,input[type='text'],input[autocomplete='username']");
+      if(idCand){ try{idCand.removeAttribute('disabled'); idCand.focus();}catch(_){} }
+    }catch(_){}
+  }
+
+  // 選択式UIを恒久的に排除（shadow DOM / 同一オリジン iframe 再帰対応）
+  const NG_TXT=/初級|中級|上級|難易度|ガイドモード|モード選択|プルダウン|カテゴリ選択|個別評価|設問別評価|開始しますか|開始の可否/;
+  const SEL="input[type=radio],input[type=checkbox],select,option,[role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options]";
+
+  function zapRoot(root){
+    if(!root) return;
+    try{
+      root.querySelectorAll("*").forEach(el=>{
+        try{
+          if(!el||el===document.body||el===document.documentElement) return;
+          const t=(el.innerText||el.textContent||"").replace(/\s+/g,"");
+          if(NG_TXT.test(t)) el.remove();
+        }catch(_){}
+      });
+      root.querySelectorAll(SEL).forEach(el=>{
+        try{ (el.closest("label,li,div,section,fieldset,form,table,tr,td")||el).remove(); }catch(_){}
+      });
+      root.querySelectorAll("*").forEach(el=>{ if(el.shadowRoot){ zapRoot(el.shadowRoot); } });
+      root.querySelectorAll("iframe").forEach(f=>{ try{ if(f.contentDocument){ zapRoot(f.contentDocument); } }catch(_){} });
+    }catch(_){}
+  }
+
+  // 生成系APIをフック：選択式UIの生成自体を抑止
+  (function hook(){
+    const mk = Element.prototype.appendChild;
+    Element.prototype.appendChild = function(n){
+      try{
+        if(n && (n.matches?.(SEL) || NG_TXT.test((n.innerText||n.textContent||"").replace(/\s+/g,"")))){
+          return n; // 採用せず戻す（実質捨てる）
+        }
+        if(n && n.shadowRoot){ zapRoot(n.shadowRoot); }
+      }catch(_){}
+      return mk.call(this,n);
+    };
+    const ib = Element.prototype.insertBefore;
+    Element.prototype.insertBefore = function(n,ref){
+      try{
+        if(n && (n.matches?.(SEL) || NG_TXT.test((n.innerText||n.textContent||"").replace(/\s+/g,"")))){
+          return n;
+        }
+        if(n && n.shadowRoot){ zapRoot(n.shadowRoot); }
+      }catch(_){}
+      return ib.call(this,n,ref);
+    };
+  })();
+
+  // 自由記述エリアを必ず用意
+  function ensureFreeForm(){
+    try{
+      if(document.querySelector("textarea[name='answer'], textarea.siwon-freeform")) return;
+      const ta=document.createElement("textarea");
+      ta.name="answer"; ta.className="siwon-freeform";
+      ta.placeholder="ここに回答を1文で入力";
+      ta.style.cssText="width:96%;max-width:900px;height:120px;margin:16px auto;display:block;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:14px";
+      (document.body||document.documentElement).appendChild(ta);
+    }catch(_){}
+  }
+
+  // 自動開始妨害を除去
+  function clearStartModals(){
+    try{
+      document.querySelectorAll(".modal,.dialog,[role='dialog']").forEach(d=>{
+        const t=(d.innerText||"").replace(/\s+/g,"");
+        if(/開始しますか|確認|可否/i.test(t)){ try{d.remove();}catch(_){ } }
+      });
+    }catch(_){}
+  }
+
+  function boot(){ minimal(); zapRoot(document); ensureFreeForm(); clearStartModals(); }
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
+
+  new MutationObserver(()=>{ zapRoot(document); ensureFreeForm(); clearStartModals(); })
+    .observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+
+  try{ if(!location.search.includes("_v=")){ const u=new URL(location.href); u.searchParams.set("_v","md-minimal-v6"); history.replaceState(null,"",u.toString()); } }catch(_){}
+})();</script>
 </body></html>
+
 
 
 
