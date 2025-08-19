@@ -17,6 +17,19 @@ function boot(){U();BZ();SC(document.body);SK()}
 if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot)}else{boot()}
 const mo=new MutationObserver(m=>{let k=false;for(const x of m){if(x.addedNodes&&x.addedNodes.length){k=true;break}if(x.type==="characterData"){k=true;break}}if(k){SC(document.body);SK();U();BZ()}});mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
 })();</script>
+<script>(function(){const MARK="Siwon 20250807 / 2025-08-19 r5b-inline";
+try{if(!location.search.includes("_v=")){const u=new URL(location.href);u.searchParams.set("_v","2025.08.19-r5b");location.replace(u.toString());return;}}catch(e){}
+const BADGE_TEXT=MARK, WELCOME="ようこそ。思考力＆AIスキル養成ツール（ベーシック版）へ！";
+const NG=/(初級|中級|上級|難易度|ガイドモード|プルダウン|自由記述|カテゴリ選択|個別評価|設問別評価)/;
+function ensureBadge(){if(document.getElementById("siwon-badge"))return;const b=document.createElement("div");b.id="siwon-badge";b.textContent=BADGE_TEXT;b.style.cssText="position:fixed;right:8px;bottom:8px;padding:4px 8px;border:1px solid #ccc;background:#fff;font-size:12px;border-radius:6px;opacity:.9;z-index:9999";document.body.appendChild(b);}
+function stripNG(root){root=root||document.body;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);let n;while(n=w.nextNode()){if(NG.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(NG,"");}root.querySelectorAll("*").forEach(e=>{if(e.children.length===0&&e.innerText&&NG.test(e.innerText))e.innerText=e.innerText.replace(NG,"");});}
+let shown=false;function focusId(){const c=document.querySelector("[name=id],#id,#user-id,input[type=text],input[autocomplete='username']"); if(c){try{c.focus();}catch(e){}}}
+function showWelcomeOnce(){if(shown)return; shown=true; const d=document.createElement("div"); d.textContent=WELCOME; d.setAttribute("role","status"); d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:16px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px"; document.body.appendChild(d); setTimeout(()=>{d.remove();focusId();},1400);}
+function attachTrigger(){window.addEventListener("keydown",(e)=>{if((e.key==="1"||e.code==="Digit1")&&!e.altKey&&!e.ctrlKey&&!e.metaKey){showWelcomeOnce();}}); document.addEventListener("click",(e)=>{const t=e.target; if(t&&t.matches&&t.matches("[data-trigger='start'],button.start,.start")){showWelcomeOnce();}});}
+function boot(){ensureBadge();stripNG(document.body);attachTrigger();}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+new MutationObserver(()=>{stripNG(document.body);ensureBadge();}).observe(document.documentElement,{subtree:true,childList:true,characterData:true});})();</script>
 </body>
 </html>
+
 
