@@ -1,0 +1,59 @@
+name: Pages bridge (serve gh-pages)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]  # 不要なら消してください
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Ensure /lite exists
+        run: |
+          test -f lite/index.html || { echo "lite/index.html not found"; exit 1; }
+
+      - name: Smoke - no banned words in /lite
+        run: |
+          if grep -Eiq "初級|中級|上級|難易度|開始しますか|開始の可否" lite/index.html; then
+            echo "banned words found in /lite"; exit 1
+          fi
+
+      - name: Smoke - no choice inputs in /lite
+        run: |
+          if grep -Eiq "<input[^>]+type=[\"'](radio|checkbox)[\"']" lite/index.html || \
+             grep -Eiq "<(select|option)\b" lite/index.html; then
+            echo "choice inputs found in /lite"; exit 1
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact from gh-pages root
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
