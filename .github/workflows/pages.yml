@@ -18,8 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Detect project & build if possible
+      - name: Detect project & build (auto)
         id: build
         shell: bash
         run: |
@@ -34,7 +33,9 @@ jobs:
           fi
           if [ ! -f "$OUTPUT_DIR/index.html" ]; then
             echo "Preparing static dist/ from repo root..."
-            rm -rf dist; mkdir -p dist; shopt -s dotglob
+            rm -rf dist
+            mkdir -p dist
+            shopt -s dotglob
             for f in *; do
               [ "$f" = ".git" ] && continue
               [ "$f" = ".github" ] && continue
@@ -46,15 +47,13 @@ jobs:
           fi
           test -f "$OUTPUT_DIR/index.html" || { echo "::error::index.html not found in $OUTPUT_DIR"; exit 1; }
           echo "output_dir=$OUTPUT_DIR" >> "$GITHUB_OUTPUT"
-
-      # ★ r5-inline（トリガー後にだけ歓迎文を出す）を未挿入なら </body> 直前へ
       - name: Inject r5-inline (welcome-after-trigger)
         shell: bash
         run: |
           set -euo pipefail
           f="${{ steps.build.outputs.output_dir }}/index.html"
           test -f "$f"
-          grep -q "2025-08-19 r5-inline" "$f" && exit 0
+          grep -q "2025-08-19 r5-inline" "$f" && { echo "already injected"; exit 0; }
           awk 'BEGIN{inj=0}
                /<\/body>/{print "<script>(function(){const MARK=\"Siwon 20250807 / 2025-08-19 r5-inline\";"+
                "(function(){try{if(!location.search.includes(\"_v=\")){const u=new URL(location.href);u.searchParams.set(\"_v\",\"2025.08.19-r5\");location.replace(u.toString());return;}}catch(e){}})();"+
@@ -71,12 +70,10 @@ jobs:
                {print}
               ' "$f" > "$f.tmp"
           mv "$f.tmp" "$f"
-
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ steps.build.outputs.output_dir }}
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
