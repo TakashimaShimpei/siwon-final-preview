@@ -1,15 +1,19 @@
 name: Deploy to GitHub Pages
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: "pages"
   cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,12 +22,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      # 1) プロジェクトを自動判定してビルド（なければ静的コピー）
       - name: Detect project & build (auto)
         id: build
         shell: bash
         run: |
           set -euo pipefail
           OUTPUT_DIR="dist"
+
           if [ -f package.json ]; then
             if [ -f package-lock.json ]; then npm ci; else npm install; fi
             if jq -e '.scripts.build' package.json >/dev/null 2>&1; then npm run build; fi
@@ -31,6 +38,7 @@ jobs:
               if [ -f "$d/index.html" ]; then OUTPUT_DIR="$d"; break; fi
             done
           fi
+
           if [ ! -f "$OUTPUT_DIR/index.html" ]; then
             echo "Preparing static dist/ from repo root..."
             rm -rf dist
@@ -45,8 +53,11 @@ jobs:
             done
             OUTPUT_DIR="dist"
           fi
+
           test -f "$OUTPUT_DIR/index.html" || { echo "::error::index.html not found in $OUTPUT_DIR"; exit 1; }
           echo "output_dir=$OUTPUT_DIR" >> "$GITHUB_OUTPUT"
+
+      # 2) r5-inline を未挿入なら </body> 直前へ自動追記
       - name: Inject r5-inline (welcome-after-trigger)
         shell: bash
         run: |
@@ -70,10 +81,13 @@ jobs:
                {print}
               ' "$f" > "$f.tmp"
           mv "$f.tmp" "$f"
+
+      # 3) Pages 構成→成果物アップロード
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ steps.build.outputs.output_dir }}
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
