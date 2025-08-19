@@ -12,5 +12,49 @@ function focusId(){const c=document.querySelector("[name=id],#id,#user-id,input[
 function showWelcomeOnce(){if(shown)return; shown=true; const d=document.createElement("div"); d.textContent=WELCOME; d.setAttribute("role","status"); d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:16px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px"; document.body.appendChild(d); setTimeout(()=>{d.remove();focusId();},1400);}
 function boot(){ensureBadge();window.addEventListener("keydown",(e)=>{if((e.key==="1"||e.code==="Digit1")&&!e.altKey&&!e.ctrlKey&&!e.metaKey){showWelcomeOnce();}});}
 if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();})();</script>
+<script>(function(){
+  const MARK="Siwon 20250807 / 2025-08-19 md-minimal";
+  // 既存の歓迎表示（r5/r6 の showWelcomeOnce）を無効化
+  try{ window.showWelcomeOnce = function(){} }catch(e){}
+
+  // 起動時は「モードIDをどうぞ」だけを一瞬表示
+  function minimalBanner(){
+    try{
+      // 既存の長文バナーらしき要素を消す（保守的にテキスト一致）
+      document.querySelectorAll("*").forEach(el=>{
+        const t = (el.innerText||"").trim();
+        if(/ようこそ|思考力.?AIスキル養成ツール|ベーシック版/.test(t)) el.innerHTML="";
+      });
+      // 最小バナー
+      if(!document.getElementById("siwon-minimal-banner")){
+        const d=document.createElement("div");
+        d.id="siwon-minimal-banner";
+        d.textContent="モードIDをどうぞ";
+        d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:12px;background:#111;color:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px";
+        document.body.appendChild(d);
+        setTimeout(()=>{try{d.remove()}catch(e){}},1500);
+      }
+      // ID入力欄にフォーカス（名称は広めに探索）
+      const cand = document.querySelector("[name=id],#id,#user-id,input[autocomplete='username'],input[type='text']");
+      if(cand){ try{cand.focus()}catch(e){} }
+    }catch(e){}
+  }
+
+  // DOMロード時に実行
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded", minimalBanner);
+  }else{
+    minimalBanner();
+  }
+
+  // 後から長文が出ても消す（保守的フィルタ）
+  new MutationObserver(()=>{ try{
+    document.querySelectorAll("*").forEach(el=>{
+      const t=(el.innerText||"").trim();
+      if(/ようこそ|思考力.?AIスキル養成ツール|ベーシック版/.test(t)) el.innerHTML="";
+    });
+  }catch(e){} }).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+})();</script>
 </body></html>
+
 
