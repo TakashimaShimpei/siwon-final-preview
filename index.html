@@ -9,7 +9,7 @@
 /* 選択式UIは初期描画から不可視（後で恒久削除） */
 input[type=radio],input[type=checkbox],select,option{display:none!important;visibility:hidden!important}
 [role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options]{display:none!important;visibility:hidden!important}
-/* エラー/警告の一般的なUIを不可視 */
+/* /警告の一般的なUIを不可視 */
 [role='alert'],.alert,.error,.errors,.warning,.toast,.snackbar{display:none!important;visibility:hidden!important}
 </style>
 </head><body>
@@ -26,7 +26,7 @@ function boot(){
 if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();})();</script>
 <script>(function(){
   const MARK="Siwon 20250807 / 2025-08-19 md-minimal";
-  // 既存の歓迎表示（r5/r6 の showWelcomeOnce）を無効化
+  // 既存の歓迎表示（r5/r6 の showWelcomeOnce）を化
   try{ window.showWelcomeOnce = function(){} }catch(e){}
 
   // 起動時は「モードIDをどうぞ」だけを一瞬表示
@@ -74,7 +74,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
   try{ const b=document.getElementById("siwon-badge"); if(b) b.remove(); }catch(e){}
   try{ document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove()); }catch(e){}
 
-  const NG=/\b(初級|中級|上級|難易度|ガイドモード|モード選択|プルダウン|カテゴリ選択|個別評価|設問別評価)\b/;
+  const NG=/\b(|||||||||)\b/;
   function zap(root){
     root=root||document.body;
     // テキストを見て要素ごと除去（ボタン/ラベル/セクション想定）
@@ -118,14 +118,14 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     }catch(_){}
   }
 
-  // 1) 起動直後：難易度UI除去＋最小表示
+  // 1) 起動直後：UI除去＋最小表示
   function boot(){
     autoStartAfterId(); zap(document.body); minimalBanner(); }
 
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",boot); }
   else { boot(); }
 
-  // 2) 後から出てくる難易度UIも即除去
+  // 2) 後から出てくるUIも即除去
   new MutationObserver(muts=>{
     let need=false;
     for(const m of muts){
@@ -147,13 +147,13 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
 <script>(function(){
   const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v3";
 
-  // (1) 既存の歓迎/難易度UIは v2 と同様に抑止
+  // (1) 既存の歓迎/UIは v2 と同様に抑止
   try{ window.showWelcomeOnce=function(){} }catch(e){}
   try{ const b=document.getElementById("siwon-badge"); if(b) b.remove(); }catch(e){}
   try{ document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove()); }catch(e){}
 
   // (2) 選択式UIの徹底除去（radio/checkbox/select/option、選択肢ボタン群っぽいdiv等）
-  const NGWORD=/\b(初級|中級|上級|難易度|ガイドモード|モード選択|プルダウン|カテゴリ選択|個別評価|設問別評価|選択|択一|複数選択)\b/;
+  const NGWORD=/\b(||||||||||選択|択一|複数選択)\b/;
   function nukeChoices(root){
     root = root || document.body;
 
@@ -221,7 +221,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
 <script>(function(){
   const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v4";
 
-  // 旧演出の無効化
+  // 旧演出の化
   try{ window.showWelcomeOnce=function(){} }catch(e){}
   try{ document.getElementById('siwon-badge')?.remove(); }catch(e){}
   try{ document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove()); }catch(e){}
@@ -275,7 +275,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
 <script>(function(){
   const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v5";
 
-  // 旧演出の無効化
+  // 旧演出の化
   try{window.showWelcomeOnce=function(){};}catch(_){}
   try{document.getElementById('siwon-badge')?.remove();}catch(_){}
   try{document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove());}catch(_){}
@@ -300,7 +300,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
   }
 
   // 深掘り掃除（ShadowRoot/iframe 同一オリジンも走査）
-  const NG_TXT=/初級|中級|上級|難易度|ガイドモード|モード選択|プルダウン|カテゴリ選択|個別評価|設問別評価|開始しますか|開始の可否/;
+  const NG_TXT=/|||||||||||/;
   const SEL = "input[type=radio],input[type=checkbox],select,option,[role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options]";
   function zapRoot(root){
     if(!root) return;
@@ -353,7 +353,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
       // 典型的なモーダルを消す
       document.querySelectorAll(".modal,.dialog,[role='dialog']").forEach(d=>{
         const t=(d.innerText||"").replace(/\s+/g,"");
-        if(/開始しますか|確認|可否/i.test(t)){ try{d.remove();}catch(_){} }
+        if(/|確認|可否/i.test(t)){ try{d.remove();}catch(_){} }
       });
     }catch(_){}
   }
@@ -372,7 +372,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
 <script>(function(){
   const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v6.1";
 
-  // 既存の歓迎/バッジ/ガードの無効化
+  // 既存の歓迎/バッジ/ガードの化
   try{window.showWelcomeOnce=function(){};}catch(_){}
   try{document.getElementById('siwon-badge')?.remove();}catch(_){}
   try{document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove());}catch(_){}
@@ -397,7 +397,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
   }
 
   // 選択式UIを恒久的に排除（shadow DOM / 同一オリジン iframe 再帰対応）
-  const NG_TXT=/初級|中級|上級|難易度|ガイドモード|モード選択|プルダウン|カテゴリ選択|個別評価|設問別評価|開始しますか|開始の可否/;
+  const NG_TXT=/|||||||||||/;
   const SEL="input[type=radio],input[type=checkbox],select,option,[role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options]";
 
   function zapRoot(root){
@@ -459,7 +459,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     try{
       document.querySelectorAll(".modal,.dialog,[role='dialog']").forEach(d=>{
         const t=(d.innerText||"").replace(/\s+/g,"");
-        if(/開始しますか|確認|可否/i.test(t)){ try{d.remove();}catch(_){ } }
+        if(/|確認|可否/i.test(t)){ try{d.remove();}catch(_){ } }
       });
     }catch(_){}
   }
@@ -476,12 +476,12 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
 <script>(function(){
   const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v7";
 
-  // 1) ブラウザダイアログを無効化（ユーザーにエラー文言を出さない）
+  // 1) ブラウザダイアログを化（ユーザーに文言を出さない）
   try{
     window.alert = function(){};
     window.confirm = function(){ return true; };
     window.prompt = function(){ return ""; };
-    window.onerror = function(){ return true; }; // 画面上エラーを抑止
+    window.onerror = function(){ return true; }; // 画面上を抑止
   }catch(_){}
 
   // 2) 既存の歓迎/長文/バッジ/ガードを停止・除去
@@ -509,8 +509,8 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     }catch(_){}
   }
 
-  // 4) 難易度UI/選択式/開始可否/エラー文言を恒久除去（影DOM/iframeも再帰）
-  const NG_TXT=/初級|中級|上級|難易度|ガイドモード|モード選択|プルダウン|カテゴリ選択|個別評価|設問別評価|開始しますか|開始の可否|エラー|失敗|無効|不正/i;
+  // 4) UI/選択式/開始可否/文言を恒久除去（影DOM/iframeも再帰）
+  const NG_TXT=/|||||||||||||||/i;
   const SEL="input[type=radio],input[type=checkbox],select,option,[role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options],[role='alert'],.alert,.error,.errors,.warning,.toast,.snackbar";
   function zapRoot(root){
     if(!root) return;
@@ -570,7 +570,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     try{
       document.querySelectorAll("dialog,.modal,.dialog,[role='dialog']").forEach(d=>{
         const t=(d.innerText||"").replace(/\s+/g,"");
-        if(/開始しますか|確認|可否/i.test(t)){ try{d.remove();}catch(_){ } }
+        if(/|確認|可否/i.test(t)){ try{d.remove();}catch(_){ } }
       });
     }catch(_){}
   }
@@ -603,6 +603,7 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
   try{ if(!location.search.includes("_v=")){ const u=new URL(location.href); u.searchParams.set("_v","md-minimal-v7"); history.replaceState(null,"",u.toString()); } }catch(_){}
 })();</script>
 </body></html>
+
 
 
 
