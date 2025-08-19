@@ -10,49 +10,72 @@ permissions:
 concurrency:
   group: "pages"
   cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # lock があるなら ci、無いなら install
-      - name: Install deps
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-
-      # あなたのビルドコマンドに合わせて変更（例：npm run build）
-      - name: Build
-        run: |
-          npm run build
-
-      # ★ dist/index.html に r4-inline を自動追記（未挿入時のみ）
-      - name: Inject r4-inline into dist/index.html if missing
+      - name: Detect project & build if possible
+        id: build
         shell: bash
         run: |
-          set -e
-          f="dist/index.html"
-          test -f "$f"
-          if ! grep -q "2025-08-19 r4-inline" "$f"; then
-            awk 'BEGIN{inj=0}
-                 /<\/body>/{print "<script>(function(){const V=\"Siwon 20250807 / 2025-08-19 r4-inline\";try{if(!location.search.includes(\"_v=\")){const u=new URL(location.href);u.searchParams.set(\"_v\",\"2025.08.19-r4\");location.replace(u.toString());return;}}catch(e){}const B=[/初級|中級|上級/g,/難易度/g,/ガイドモード/g,/プルダウン/g,/自由記述/g,/カテゴリ選択/g,/個別評価|設問別評価/g],bo=/(初級|中級|上級|難易度|ガイドモード|プルダウン|自由記述|カテゴリ選択|個別評価|設問別評価)/;function S(s){return B.reduce((t,r)=>t.replace(r,\"\") ,String(s||\"\"))}function U(){if(!document.querySelector(\"[data-boot-min='\''1'\'']\")){const d=document.createElement(\"div\");d.setAttribute(\"data-boot-min\",\"1\");d.style.cssText=\"margin:16px 12px;padding:12px;border:1px dashed #bbb;border-radius:8px\";d.innerText=\"シヲン20250807 起動\n1=開始 / 9=終了\n入力は数値のみ\";document.body.insertBefore(d,document.body.firstChild);}}function BZ(){if(document.getElementById(\"siwon-badge\"))return;const b=document.createElement(\"div\");b.id=\"siwon-badge\";b.textContent=V;b.style.cssText=\"position:fixed;right:8px;bottom:8px;padding:4px 8px;border:1px solid #ccc;background:#fff;font-size:12px;opacity:.85;z-index:9999\";document.body.appendChild(b);}function SC(r){if(!r)r=document.body;const w=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null);let n;while(n=w.nextNode()){if(bo.test(n.nodeValue))n.nodeValue=S(n.nodeValue)}r.querySelectorAll(\"*\").forEach(e=>{if(e.children.length===0&&e.innerText&&bo.test(e.innerText))e.innerText=S(e.innerText)})}function SK(){const t=(document.body.innerText||\"\");if(/難易度|初級|中級|上級/.test(t)){document.querySelectorAll(\"*\").forEach(e=>{if(e&&e.innerText&&/難易度|初級|中級|上級/.test(e.innerText)){e.innerHTML=\"\"}})}}function boot(){U();BZ();SC(document.body);SK()}if(document.readyState===\"loading\"){document.addEventListener(\"DOMContentLoaded\",boot)}else{boot()}const mo=new MutationObserver(m=>{let k=false;for(const x of m){if(x.addedNodes&&x.addedNodes.length){k=true;break}if(x.type===\"characterData\"){k=true;break}}if(k){SC(document.body);SK();U();BZ()}});mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true});})();</script>"; inj=1}
-                 {print}
-                ' "$f" > "$f.tmp"
-            mv "$f.tmp" "$f"
+          set -euo pipefail
+          OUTPUT_DIR="dist"
+          if [ -f package.json ]; then
+            if [ -f package-lock.json ]; then npm ci; else npm install; fi
+            if jq -e '.scripts.build' package.json >/dev/null 2>&1; then npm run build; fi
+            for d in dist build out public; do
+              if [ -f "$d/index.html" ]; then OUTPUT_DIR="$d"; break; fi
+            done
           fi
+          if [ ! -f "$OUTPUT_DIR/index.html" ]; then
+            echo "Preparing static dist/ from repo root..."
+            rm -rf dist; mkdir -p dist; shopt -s dotglob
+            for f in *; do
+              [ "$f" = ".git" ] && continue
+              [ "$f" = ".github" ] && continue
+              [ "$f" = "node_modules" ] && continue
+              [ "$f" = "dist" ] && continue
+              cp -r "$f" dist/ 2>/dev/null || true
+            done
+            OUTPUT_DIR="dist"
+          fi
+          test -f "$OUTPUT_DIR/index.html" || { echo "::error::index.html not found in $OUTPUT_DIR"; exit 1; }
+          echo "output_dir=$OUTPUT_DIR" >> "$GITHUB_OUTPUT"
 
+      # ★ r5-inline（トリガー後にだけ歓迎文を出す）を未挿入なら </body> 直前へ
+      - name: Inject r5-inline (welcome-after-trigger)
+        shell: bash
+        run: |
+          set -euo pipefail
+          f="${{ steps.build.outputs.output_dir }}/index.html"
+          test -f "$f"
+          grep -q "2025-08-19 r5-inline" "$f" && exit 0
+          awk 'BEGIN{inj=0}
+               /<\/body>/{print "<script>(function(){const MARK=\"Siwon 20250807 / 2025-08-19 r5-inline\";"+
+               "(function(){try{if(!location.search.includes(\"_v=\")){const u=new URL(location.href);u.searchParams.set(\"_v\",\"2025.08.19-r5\");location.replace(u.toString());return;}}catch(e){}})();"+
+               "const BADGE_TEXT=MARK;const WELCOME=\"ようこそ。思考力＆AIスキル養成ツール（ベーシック版）へ！\";"+
+               "const NG=/(初級|中級|上級|難易度|ガイドモード|プルダウン|自由記述|カテゴリ選択|個別評価|設問別評価)/;"+
+               "function ensureBadge(){if(document.getElementById(\"siwon-badge\"))return;const b=document.createElement(\"div\");b.id=\"siwon-badge\";b.textContent=BADGE_TEXT;b.style.cssText=\"position:fixed;right:8px;bottom:8px;padding:4px 8px;border:1px solid #ccc;background:#fff;font-size:12px;border-radius:6px;opacity:.9;z-index:9999\";document.body.appendChild(b);}"+
+               "function stripNG(root){root=root||document.body;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);let n;while(n=w.nextNode()){if(NG.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(NG,\"\");}root.querySelectorAll(\"*\").forEach(e=>{if(e.children.length===0&&e.innerText&&NG.test(e.innerText))e.innerText=e.innerText.replace(NG,\"\");});}"+
+               "let shown=false;function focusId(){const c=document.querySelector(\"[name=id],#id,#user-id,input[type=text],input[autocomplete='username']\"); if(c){try{c.focus();}catch(e){}}}"+
+               "function showWelcomeOnce(){if(shown)return; shown=true; const d=document.createElement(\"div\"); d.textContent=WELCOME; d.setAttribute(\"role\",\"status\"); d.style.cssText=\"position:fixed;left:50%;transform:translateX(-50%);top:16px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px\"; document.body.appendChild(d); setTimeout(()=>{d.remove();focusId();},1400);}"+
+               "function attachTrigger(){window.addEventListener(\"keydown\",(e)=>{if((e.key===\"1\"||e.code===\"Digit1\")&&!e.altKey&&!e.ctrlKey&&!e.metaKey){showWelcomeOnce();}}); document.addEventListener(\"click\",(e)=>{const t=e.target; if(t&&t.matches&&t.matches(\"[data-trigger=\'start\'],button.start,.start\")){showWelcomeOnce();}});}"+
+               "function boot(){ensureBadge();stripNG(document.body);attachTrigger();}"+
+               "if(document.readyState===\"loading\"){document.addEventListener(\"DOMContentLoaded\",boot);}else{boot();}"+
+               "new MutationObserver(()=>{stripNG(document.body);ensureBadge();}).observe(document.documentElement,{subtree:true,childList:true,characterData:true});})();</script>"; inj=1}
+               {print}
+              ' "$f" > "$f.tmp"
+          mv "$f.tmp" "$f"
+
+      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: ${{ steps.build.outputs.output_dir }}
 
   deploy:
     needs: build
