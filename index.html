@@ -1,4 +1,9 @@
 <!doctype html><html lang="ja"><head>
+<style id="siwon-css-kill">
+/* 即時に視覚消去： */
+input[type=radio], input[type=checkbox], select, option { display:none !important; visibility:hidden !important; }
+[role='radiogroup'], .options, .option, .choices, .choice, [data-choice], [data-options] { display:none !important; visibility:hidden !important; }
+</style>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Siwon 20250807 (gh-pages)</title>
 </head><body>
@@ -204,7 +209,61 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     }
   }catch(_){}
 })();</script>
+<script>(function(){
+  const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v4";
+
+  // 旧演出の無効化
+  try{ window.showWelcomeOnce=function(){} }catch(e){}
+  try{ document.getElementById('siwon-badge')?.remove(); }catch(e){}
+  try{ document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove()); }catch(e){}
+
+  // 起動直後に最小バナー
+  function minimal(){
+    try{
+      document.querySelectorAll("*").forEach(el=>{
+        const t=(el.innerText||"").trim();
+        if(/ようこそ|思考力.?AIスキル養成ツール|ベーシック版/.test(t)) el.innerHTML="";
+      });
+      if(!document.getElementById("siwon-minimal")){
+        const d=document.createElement("div");
+        d.id="siwon-minimal";
+        d.textContent="モードIDをどうぞ";
+        d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:12px;background:#111;color:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px";
+        document.body.appendChild(d);
+        setTimeout(()=>{try{d.remove()}catch(_){}} ,1200);
+      }
+      const cand=document.querySelector("textarea,[name=id],#id,#user-id,input[type='text'],input[autocomplete='username']");
+      if(cand){ try{cand.removeAttribute('disabled'); cand.focus();}catch(_){ } }
+    }catch(_){}
+  }
+
+  // 選択式UIの徹底排除（何度でも）
+  const SEL = "input[type=radio],input[type=checkbox],select,option,[role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options]";
+  function nuke(){
+    try{
+      document.querySelectorAll(SEL).forEach(el=>{
+        try{
+          const host = el.closest("label,li,div,section,fieldset,form")||el;
+          host.remove();
+        }catch(_){}
+      });
+    }catch(_){}
+  }
+
+  function boot(){ nuke(); minimal(); }
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
+
+  new MutationObserver(()=>{ nuke(); }).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+
+  try{
+    if(!location.search.includes("_v=")){
+      const u=new URL(location.href); u.searchParams.set("_v","md-minimal-v4");
+      history.replaceState(null,"",u.toString());
+    }
+  }catch(_){}
+})();</script>
 </body></html>
+
 
 
 
