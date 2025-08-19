@@ -131,7 +131,81 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     }
   }catch(_){}
 })();</script>
+<script>(function(){
+  const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v3";
+
+  // (1) 既存の歓迎/難易度UIは v2 と同様に抑止
+  try{ window.showWelcomeOnce=function(){} }catch(e){}
+  try{ const b=document.getElementById("siwon-badge"); if(b) b.remove(); }catch(e){}
+  try{ document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove()); }catch(e){}
+
+  // (2) 選択式UIの徹底除去（radio/checkbox/select/option、選択肢ボタン群っぽいdiv等）
+  const NGWORD=/\b(初級|中級|上級|難易度|ガイドモード|モード選択|プルダウン|カテゴリ選択|個別評価|設問別評価|選択|択一|複数選択)\b/;
+  function nukeChoices(root){
+    root = root || document.body;
+
+    // フォーム入力系（選択式）
+    root.querySelectorAll("input[type=radio],input[type=checkbox],select,option").forEach(el=>{ try{ el.closest("label,li,div,section,fieldset,form")?.remove(); el.remove(); }catch(_){}});
+
+    // 明らかな選択肢ボタン群（.option, .choice, data-choice 等の命名/role）
+    root.querySelectorAll("[role='radiogroup'],[role='group'],.option,.options,.choice,.choices,[data-choice],[data-options]")
+        .forEach(el=>{ try{ el.remove(); }catch(_){}});
+
+    // 文言での検出（ボタン/ラベル/項目行）
+    root.querySelectorAll("*").forEach(el=>{
+      try{
+        if(!el || el===document.body || el===document.documentElement) return;
+        const t=(el.innerText||el.textContent||"").replace(/\s+/g,"").slice(0,100);
+        if(NGWORD.test(t)){
+          // 選択肢の親っぽければまとめて除去
+          const parent = el.closest("li,div,section,fieldset,form") || el;
+          parent.remove();
+        }
+      }catch(_){}
+    });
+  }
+
+  // (3) 最小バナー「モードIDをどうぞ」＋自由入力へフォーカス
+  function minimalBanner(){
+    try{
+      document.querySelectorAll("*").forEach(el=>{
+        const t=(el.innerText||"").trim();
+        if(/ようこそ|思考力.?AIスキル養成ツール|ベーシック版/.test(t)) el.innerHTML="";
+      });
+      if(!document.getElementById("siwon-minimal-banner")){
+        const d=document.createElement("div");
+        d.id="siwon-minimal-banner";
+        d.textContent="モードIDをどうぞ";
+        d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:12px;background:#111;color:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px";
+        document.body.appendChild(d);
+        setTimeout(()=>{try{d.remove()}catch(_){}} ,1500);
+      }
+      // 入力はテキスト/textareaに限定して誘導
+      const cand = document.querySelector("textarea,[name=id],#id,#user-id,input[type='text'],input[autocomplete='username']");
+      if(cand){ try{ cand.removeAttribute("disabled"); cand.focus(); }catch(_){} }
+    }catch(_){}
+  }
+
+  // (4) 起動時＆動的変化の両方で適用
+  function boot(){ nukeChoices(document.body); minimalBanner(); }
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
+
+  new MutationObserver(m=>{
+    let need=false;
+    for(const x of m){ if((x.addedNodes&&x.addedNodes.length)||x.type==="characterData"){ need=true; break; } }
+    if(need){ nukeChoices(document.body); }
+  }).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+
+  // (5) URLにバージョンタグ（キャッシュ回避用）を付与（リロードはしない）
+  try{
+    if(!location.search.includes("_v=")){
+      const u=new URL(location.href); u.searchParams.set("_v","md-minimal-v3");
+      history.replaceState(null,"",u.toString());
+    }
+  }catch(_){}
+})();</script>
 </body></html>
+
 
 
 
