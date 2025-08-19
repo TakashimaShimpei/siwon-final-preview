@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Siwon 20250807 (gh-pages)</title>
+</head><body>
+<h1>Siwon 20250807 (gh-pages)</h1>
+<p>このページは <strong>gh-pages</strong> ブランチから配信されています。</p>
+<script>(function(){const MARK="Siwon 20250807 / 2025-08-19 r6-inline";
+try{if(!location.search.includes("_v=")){const u=new URL(location.href);u.searchParams.set("_v","2025.08.19-r6");location.replace(u.toString());return;}}catch(e){}
+const BADGE_TEXT=MARK, WELCOME="ようこそ。思考力＆AIスキル養成ツール（ベーシック版）へ！";
+function ensureBadge(){if(document.getElementById("siwon-badge"))return;const b=document.createElement("div");b.id="siwon-badge";b.textContent=BADGE_TEXT;b.style.cssText="position:fixed;right:8px;bottom:8px;padding:4px 8px;border:1px solid #ccc;background:#fff;font-size:12px;border-radius:6px;opacity:.9;z-index:9999";document.body.appendChild(b);}
+let shown=false;function focusId(){const c=document.querySelector("[name=id],#id,#user-id,input[type=text],input[autocomplete='username']"); if(c){try{c.focus();}catch(e){}}}
+function showWelcomeOnce(){if(shown)return; shown=true; const d=document.createElement("div"); d.textContent=WELCOME; d.setAttribute("role","status"); d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:16px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px"; document.body.appendChild(d); setTimeout(()=>{d.remove();focusId();},1400);}
+function boot(){ensureBadge();window.addEventListener("keydown",(e)=>{if((e.key==="1"||e.code==="Digit1")&&!e.altKey&&!e.ctrlKey&&!e.metaKey){showWelcomeOnce();}});}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})();</script>
+</body></html>
+
