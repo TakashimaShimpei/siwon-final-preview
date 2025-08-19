@@ -1,13 +1,17 @@
 <!doctype html><html lang="ja"><head>
-<style id="siwon-css-v6">
-/* 初期描画から選択式UIを視覚的に消す */
-input[type=radio],input[type=checkbox],select,option{display:none!important;visibility:hidden!important}
-[role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options]{display:none!important;visibility:hidden!important}
-</style>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; frame-src 'self'; connect-src 'self'">
+
 
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Siwon 20250807 (gh-pages)</title>
+<style id="siwon-css-v7">
+/* 選択式UIは初期描画から不可視（後で恒久削除） */
+input[type=radio],input[type=checkbox],select,option{display:none!important;visibility:hidden!important}
+[role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options]{display:none!important;visibility:hidden!important}
+/* エラー/警告の一般的なUIを不可視 */
+[role='alert'],.alert,.error,.errors,.warning,.toast,.snackbar{display:none!important;visibility:hidden!important}
+</style>
 </head><body>
 <h1>Siwon 20250807 (gh-pages)</h1>
 <p>このページは <strong>gh-pages</strong> ブランチから配信されます。</p>
@@ -469,7 +473,137 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
 
   try{ if(!location.search.includes("_v=")){ const u=new URL(location.href); u.searchParams.set("_v","md-minimal-v6"); history.replaceState(null,"",u.toString()); } }catch(_){}
 })();</script>
+<script>(function(){
+  const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v7";
+
+  // 1) ブラウザダイアログを無効化（ユーザーにエラー文言を出さない）
+  try{
+    window.alert = function(){};
+    window.confirm = function(){ return true; };
+    window.prompt = function(){ return ""; };
+    window.onerror = function(){ return true; }; // 画面上エラーを抑止
+  }catch(_){}
+
+  // 2) 既存の歓迎/長文/バッジ/ガードを停止・除去
+  try{ window.showWelcomeOnce=function(){}; }catch(_){}
+  try{ document.getElementById('siwon-badge')?.remove(); }catch(_){}
+  try{ document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove()); }catch(_){}
+
+  // 3) 最小バナーのみ（1秒）
+  function minimal(){
+    try{
+      // 長文を常に消し込み
+      document.querySelectorAll("*").forEach(el=>{
+        const t=(el.innerText||"").trim();
+        if(/ようこそ|思考力.?AIスキル養成ツール|ベーシック版/.test(t)) el.innerHTML="";
+      });
+      if(!document.getElementById("siwon-minimal")){
+        const d=document.createElement("div");
+        d.id="siwon-minimal";
+        d.textContent="モードIDをどうぞ";
+        d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:12px;background:#111;color:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px";
+        document.body.appendChild(d); setTimeout(()=>{try{d.remove()}catch(_){}},1000);
+      }
+      const idCand=document.querySelector("textarea,[name=id],#id,#user-id,input[type='text'],input[autocomplete='username']");
+      if(idCand){ try{idCand.removeAttribute('disabled'); idCand.focus();}catch(_){} }
+    }catch(_){}
+  }
+
+  // 4) 難易度UI/選択式/開始可否/エラー文言を恒久除去（影DOM/iframeも再帰）
+  const NG_TXT=/初級|中級|上級|難易度|ガイドモード|モード選択|プルダウン|カテゴリ選択|個別評価|設問別評価|開始しますか|開始の可否|エラー|失敗|無効|不正/i;
+  const SEL="input[type=radio],input[type=checkbox],select,option,[role='radiogroup'],.options,.option,.choices,.choice,[data-choice],[data-options],[role='alert'],.alert,.error,.errors,.warning,.toast,.snackbar";
+  function zapRoot(root){
+    if(!root) return;
+    try{
+      // テキスト一致で親ごと除去
+      root.querySelectorAll("*").forEach(el=>{
+        try{
+          if(!el||el===document.body||el===document.documentElement) return;
+          const t=(el.innerText||el.textContent||"").replace(/\s+/g,"");
+          if(NG_TXT.test(t)) (el.closest("label,li,div,section,fieldset,form,table,tr,td,dialog,.modal,.dialog")||el).remove();
+        }catch(_){}
+      });
+      // パターン要素は容器ごと除去
+      root.querySelectorAll(SEL).forEach(el=>{
+        try{ (el.closest("label,li,div,section,fieldset,form,table,tr,td,dialog,.modal,.dialog")||el).remove(); }catch(_){}
+      });
+      // 影DOM/同一オリジンiframe 再帰
+      root.querySelectorAll("*").forEach(el=>{ if(el.shadowRoot){ zapRoot(el.shadowRoot); } });
+      root.querySelectorAll("iframe").forEach(f=>{ try{ if(f.contentDocument){ zapRoot(f.contentDocument); } }catch(_){} });
+    }catch(_){}
+  }
+
+  // 5) 生成自体をフック（appendChild/insertBefore）
+  (function hook(){
+    const mk = Element.prototype.appendChild;
+    Element.prototype.appendChild = function(n){
+      try{
+        if(n && (n.matches?.(SEL) || NG_TXT.test((n.innerText||n.textContent||"").replace(/\s+/g,"")))) return n;
+        if(n && n.shadowRoot){ zapRoot(n.shadowRoot); }
+      }catch(_){}
+      return mk.call(this,n);
+    };
+    const ib = Element.prototype.insertBefore;
+    Element.prototype.insertBefore = function(n,ref){
+      try{
+        if(n && (n.matches?.(SEL) || NG_TXT.test((n.innerText||n.textContent||"").replace(/\s+/g,"")))) return n;
+        if(n && n.shadowRoot){ zapRoot(n.shadowRoot); }
+      }catch(_){}
+      return ib.call(this,n,ref);
+    };
+  })();
+
+  // 6) 自由記述テキストエリアを確保（必ず1つ用意）
+  function ensureFreeForm(){
+    try{
+      if(document.querySelector("textarea[name='answer'], textarea.siwon-freeform")) return;
+      const ta=document.createElement("textarea");
+      ta.name="answer"; ta.className="siwon-freeform";
+      ta.placeholder="ここに回答を1文で入力";
+      ta.style.cssText="width:96%;max-width:900px;height:120px;margin:16px auto;display:block;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:14px";
+      (document.body||document.documentElement).appendChild(ta);
+    }catch(_){}
+  }
+
+  // 7) 開始可否ダイアログを消す & 自動開始（ID入力を合図）
+  function clearStartModals(){
+    try{
+      document.querySelectorAll("dialog,.modal,.dialog,[role='dialog']").forEach(d=>{
+        const t=(d.innerText||"").replace(/\s+/g,"");
+        if(/開始しますか|確認|可否/i.test(t)){ try{d.remove();}catch(_){ } }
+      });
+    }catch(_){}
+  }
+  function tryStart(){
+    try{
+      const btn=document.querySelector("[data-trigger='start'], button.start, .start, button, a");
+      if(btn){
+        const txt=((btn.innerText||btn.textContent||"")+(btn.getAttribute('aria-label')||'')).trim();
+        if(/開始|Start|BEGIN/i.test(txt)){ btn.click(); }
+      }
+    }catch(_){}
+  }
+  function autoStartAfterId(){
+    try{
+      const id=document.querySelector("[name=id],#id,#user-id,input[autocomplete='username'],input[type='text']");
+      if(!id) return;
+      const kick=()=>{ setTimeout(()=>{ clearStartModals(); tryStart(); },80); };
+      id.addEventListener("keydown",e=>{ if(e.key==="Enter"){ kick(); }});
+      id.addEventListener("change",kick);
+      id.addEventListener("blur",kick);
+    }catch(_){}
+  }
+
+  // 8) 起動
+  function boot(){ minimal(); zapRoot(document); ensureFreeForm(); clearStartModals(); autoStartAfterId(); }
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
+  new MutationObserver(()=>{ zapRoot(document); ensureFreeForm(); clearStartModals(); }).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+
+  // 9) URLにトレース用マーカー付与（リロード無し）
+  try{ if(!location.search.includes("_v=")){ const u=new URL(location.href); u.searchParams.set("_v","md-minimal-v7"); history.replaceState(null,"",u.toString()); } }catch(_){}
+})();</script>
 </body></html>
+
 
 
 
