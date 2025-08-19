@@ -55,6 +55,83 @@ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded"
     });
   }catch(e){} }).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
 })();</script>
+<script>(function(){
+  const MARK="Siwon 20250807 / 2025-08-19 md-minimal-v2";
+  // 既存バナー/バッジ/ガードを停止・除去
+  try{ window.showWelcomeOnce=function(){} }catch(e){}
+  try{ const b=document.getElementById("siwon-badge"); if(b) b.remove(); }catch(e){}
+  try{ document.querySelectorAll('script[src*="patch/boot_guard.js"]').forEach(s=>s.remove()); }catch(e){}
+
+  const NG=/\b(初級|中級|上級|難易度|ガイドモード|モード選択|プルダウン|カテゴリ選択|個別評価|設問別評価)\b/;
+  function zap(root){
+    root=root||document.body;
+    // テキストを見て要素ごと除去（ボタン/ラベル/セクション想定）
+    root.querySelectorAll("*").forEach(el=>{
+      try{
+        if(!el || el===document.body || el===document.documentElement) return;
+        const t=(el.innerText||el.textContent||"").replace(/\s+/g,"").slice(0,80);
+        if(NG.test(t)){
+          el.remove();
+        }
+      }catch(_){}
+    });
+    // ラジオ/セレクトなども念のため
+    root.querySelectorAll("select,option,button,label,[role='radiogroup'],input[type=radio]").forEach(el=>{
+      try{
+        const t=(el.innerText||el.textContent||el.value||"").replace(/\s+/g,"");
+        if(NG.test(t)) el.remove();
+      }catch(_){}
+    });
+  }
+
+  function minimalBanner(){
+    try{
+      // 既存の「ようこそ…」系の長文を消す
+      document.querySelectorAll("*").forEach(el=>{
+        const t=(el.innerText||"").trim();
+        if(/ようこそ|思考力.?AIスキル養成ツール|ベーシック版/.test(t)) el.innerHTML="";
+      });
+      // 最小バナー（1.5秒だけ）
+      if(!document.getElementById("siwon-minimal-banner")){
+        const d=document.createElement("div");
+        d.id="siwon-minimal-banner";
+        d.textContent="モードIDをどうぞ";
+        d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:12px;background:#111;color:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10000;font-size:14px";
+        document.body.appendChild(d);
+        setTimeout(()=>{try{d.remove()}catch(_){}} ,1500);
+      }
+      // ID入力欄へフォーカス（候補を広めに）
+      const cand=document.querySelector("[name=id],#id,#user-id,input[autocomplete='username'],input[type='text']");
+      if(cand){ try{cand.focus()}catch(_){ } }
+    }catch(_){}
+  }
+
+  // 1) 起動直後：難易度UI除去＋最小表示
+  function boot(){ zap(document.body); minimalBanner(); }
+
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",boot); }
+  else { boot(); }
+
+  // 2) 後から出てくる難易度UIも即除去
+  new MutationObserver(muts=>{
+    let need=false;
+    for(const m of muts){
+      if(m.addedNodes && m.addedNodes.length){ need=true; break; }
+      if(m.type==="characterData"){ need=true; break; }
+    }
+    if(need){ zap(document.body); }
+  }).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+
+  // 3) CDN回避（パラメタが無ければ付け替え） ※一度だけ
+  try{
+    if(!location.search.includes("_v=")){
+      const u=new URL(location.href);
+      u.searchParams.set("_v","md-minimal-v2");
+      history.replaceState(null,"",u.toString()); // reloadはせずURLだけ更新
+    }
+  }catch(_){}
+})();</script>
 </body></html>
+
 
 
